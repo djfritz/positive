@@ -33,10 +33,25 @@ var gammaMap = map[string]gamma{
 		g: 0.5737822736392102,
 		b: 0.6624829032379945,
 	},
+	"portra160": {
+		r: 0.5303095093187974,
+		g: 0.5424400871459694,
+		b: 0.6105737489503811,
+	},
 	"portra800": {
 		r: 0.5228012326204643,
 		g: 0.536735995403697,
 		b: 0.6114420242779521,
+	},
+	"acros2": {
+		r: 0.39215561420017303,
+		g: 0.39215561420017303,
+		b: 0.39215561420017303,
+	},
+	"trix400": {
+		r: 0.6124631002951977,
+		g: 0.6124631002951977,
+		b: 0.6124631002951977,
 	},
 }
 
@@ -48,6 +63,7 @@ var (
 	fBase      = flag.String("base", "", "Path to mask film sample for mask correction")
 	fUpper     = flag.Int("tupper", 10, "Pixel count upper threshold for normalization")
 	fLower     = flag.Int("tlower", 10, "Pixel count lower threshold for normalization")
+	fGray	 = flag.Bool("gray", false, "Output 16-bit grayscale")
 )
 
 func main() {
@@ -107,6 +123,17 @@ func main() {
 	}
 
 	defer fout.Close()
+
+	if *fGray {
+		g := image.NewGray16(m.Bounds())
+		for x := 0; x < m.Bounds().Max.X; x++ {
+			for y := 0; y < m.Bounds().Max.Y; y++ {
+				g.SetRGBA64(x, y, m.At(x, y).(color.RGBA64))
+			}
+		}
+		m = g
+	}
+
 	tiff.Encode(fout, m, nil)
 }
 
@@ -122,6 +149,7 @@ func applyGamma(m image.Image, rg, gg, bg float64) image.Image {
 			ret.Set(x, y, color.RGBA64{R: uint16(r), G: uint16(g), B: uint16(b), A: 0xffff})
 		}
 	}
+
 	return ret
 }
 
