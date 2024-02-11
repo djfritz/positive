@@ -6,6 +6,7 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"fmt"
 	"image"
@@ -16,12 +17,17 @@ import (
 
 const BLACK_POINT uint32 = 32768
 
-func main() {
-	if len(os.Args) != 2 {
-		log.Fatal("usage: gamma <input file>")
-	}
+var (
+	fBW = flag.Bool("bw", false, "set black and white mode (single curve)")
+)
 
-	input := os.Args[1]
+func main() {
+	flag.Parse()
+
+	input := flag.Arg(0)
+	if input == "" {
+		fmt.Println("usage: gamma <input file>")
+	}
 
 	f, err := os.Open(input)
 	if err != nil {
@@ -80,6 +86,10 @@ OUTER:
 			y--
 		}
 
+		if *fBW {
+			continue
+		}
+
 		// green
 		green = append(green, bounds.Max.Y-y)
 
@@ -90,6 +100,7 @@ OUTER:
 			}
 			y--
 		}
+
 
 		for {
 			if y == 0 {
@@ -104,6 +115,11 @@ OUTER:
 
 		// blue
 		blue = append(blue, bounds.Max.Y-y)
+	}
+
+	if *fBW {
+		green = red
+		blue = red
 	}
 
 	// calculate the slope
